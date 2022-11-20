@@ -103,10 +103,12 @@ fn output_ppm(out: anytype, reel: *Reel, opts: Opts) !void {
 }
 
 pub fn main() !void {
-    const output_file = try fs.cwd().createFile("file.ppm", .{ .truncate = true });
-    defer output_file.close();
+    //const output_file = try fs.cwd().createFile("file.ppm", .{ .truncate = true });
+    //defer output_file.close();
 
-    var bw = std.io.bufferedWriter(output_file.writer());
+    //var bw = std.io.bufferedWriter(output_file.writer());
+
+    const stdout = std.io.getStdOut().writer();
 
     var prng = std.rand.DefaultPrng.init(blk: {
         var seed: u64 = undefined;
@@ -117,15 +119,34 @@ pub fn main() !void {
 
     const opts =  .{
         .colors = [2][3]u8{[3]u8{0x75, 0x75, 0x75}, [3]u8{0x42, 0x42, 0x42}},
-        .width = 4000,
-        .height = 4000,
+        .width = 100,
+        .height = 100,
         .rule = 169,
     };
 
     var reel = try Reel.initRandom(opts.rule, opts.width, rand);
     defer reel.deinit();
 
-    try output_ppm(bw.writer(), &reel, opts);
+    // try output_ppm(bw.writer(), &reel, opts);
 
-    try bw.flush();
+    var i: usize = 0;
+    while (i != opts.height) : (i += 1) {
+        var j: usize = 0;
+        while (j != opts.width) : (j += 1) {
+            //for (opts.colors[@bitCast(u1, reel.data.isSet(j))]) |color| {
+            //    try stdout.print("{d} ", .{color});
+            //}
+
+            if (reel.data.isSet(j)) {
+                try stdout.print("*", .{});
+            } else {
+                try stdout.print(" ", .{});
+            }
+        }
+        try stdout.print("\n", .{});
+
+        reel.nextState();
+    }
+
+    //try bw.flush();
 }
